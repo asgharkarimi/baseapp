@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'custom_text_input.dart'; // Import the CustomTextInput widget
 
 class IncomePage extends StatefulWidget {
   const IncomePage({super.key});
@@ -12,37 +13,57 @@ class _IncomePageState extends State<IncomePage> {
 
   // List of income types
   final List<String> _incomeTypes = [
-    'درآمد ساعتی', // Hourly Income
-    'درآمد هکتاری', // Per Hectare Income
-    'درآمد سرویس بار تریلی', // Trailer Service Income
-    'درآمد کودپاش', // Fertilizer Application Income
+    'شخم ساعتی', // Hourly Income
+    'شخم هکتاری', // Per Hectare Income
+    'سرویس بار تریلی', // Trailer Service Income
+    'کودپاش', // Fertilizer Application Income
   ];
 
   String? _selectedIncomeType; // Selected income type
-  double _incomeAmount = 0.0; // Amount for the selected income type
+  final _hourlyRateController = TextEditingController(); // مبلغ هر ساعت
+  final _workingHoursController = TextEditingController(); // تعداد ساعات کارکرد
+  final _employerNameController = TextEditingController(); // نام صاحب کار
+
+  @override
+  void initState() {
+    super.initState();
+    // Set default value for dropdown
+    _selectedIncomeType = _incomeTypes[0]; // Default to "شخم ساعتی"
+  }
+
+  @override
+  void dispose() {
+    _hourlyRateController.dispose();
+    _workingHoursController.dispose();
+    _employerNameController.dispose();
+    super.dispose();
+  }
 
   void _saveIncome() {
     if (_formKey.currentState!.validate()) {
-      if (_selectedIncomeType == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('لطفاً نوع درآمد را انتخاب کنید')), // Please select an income type
-        );
-        return;
-      }
+      // Retrieve input values
+      final hourlyRate = _hourlyRateController.text;
+      final workingHours = _workingHoursController.text;
+      final employerName = _employerNameController.text;
 
       // Save logic here (e.g., store in database or send to server)
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'درآمد "$_selectedIncomeType" با مقدار $_incomeAmount ذخیره شد',
+            'درآمد "$_selectedIncomeType" با جزئیات ذخیره شد:\n'
+                'مبلغ هر ساعت: $hourlyRate\n'
+                'تعداد ساعات کارکرد: $workingHours\n'
+                'نام صاحب کار: $employerName',
           ),
         ),
       );
 
       // Reset fields after saving
       setState(() {
-        _selectedIncomeType = null;
-        _incomeAmount = 0.0;
+        _selectedIncomeType = _incomeTypes[0]; // Reset dropdown to default
+        _hourlyRateController.clear();
+        _workingHoursController.clear();
+        _employerNameController.clear();
       });
     }
   }
@@ -56,7 +77,7 @@ class _IncomePageState extends State<IncomePage> {
         backgroundColor: Colors.blue, // Use your app's primary color
       ),
       body: Padding(
-        padding: const EdgeInsets.all(6),
+        padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
           child: Column(
@@ -88,21 +109,37 @@ class _IncomePageState extends State<IncomePage> {
                 },
               ),
               const SizedBox(height: 16),
-              TextFormField(
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(
-                  labelText: 'مبلغ', // Persian: Amount
-                  border: OutlineInputBorder(),
-                ),
-                initialValue: _incomeAmount.toString(),
-                onChanged: (value) {
-                  setState(() {
-                    _incomeAmount = double.tryParse(value) ?? 0.0;
-                  });
-                },
+              CustomTextInput(
+                labelText: 'مبلغ هر ساعت', // Amount per Hour
+                keyboardType: TextInputType.number,
+                controller: _hourlyRateController,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'لطفاً مبلغ را وارد کنید'; // Please enter an amount
+                    return 'لطفاً مبلغ هر ساعت را وارد کنید'; // Please enter amount per hour
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              CustomTextInput(
+                labelText: 'تعداد ساعات کارکرد', // Number of Working Hours
+                keyboardType: TextInputType.number,
+                controller: _workingHoursController,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'لطفاً تعداد ساعات کارکرد را وارد کنید'; // Please enter working hours
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              CustomTextInput(
+                labelText: 'نام صاحب کار', // Employer's Name
+                keyboardType: TextInputType.text,
+                controller: _employerNameController,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'لطفاً نام صاحب کار را وارد کنید'; // Please enter employer's name
                   }
                   return null;
                 },
